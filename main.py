@@ -118,10 +118,12 @@ class Bullet(object):
 
     def check_collision(self):
         collide = False
+        positionX = round(self.rect.x / squareSize)
+        positionY = round(self.rect.y / squareSize)
         if self.rect.colliderect(player.rect):
             collide = True
 
-        if self.rect.collidelist(walls):
+        if matrix[positionY][positionX] == 1:
             collide = True
         return collide
 
