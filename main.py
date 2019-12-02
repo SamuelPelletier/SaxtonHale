@@ -90,6 +90,10 @@ def move(direction, object):
             object.rect = object.rect.move(0, squareSize)
             object.positionY += 1
 
+def angle_calcul_for_pnj_to_player(pnj,player):
+    distancePNJPlayer = math.sqrt((abs(pnj.positionX-player.positionX))**2+(abs(pnj.positionY-player.positionY))**2)
+    return math.degrees(math.acos(abs(pnj.positionX-player.positionX)/distancePNJPlayer))
+
 class Wall(object):
     def __init__(self, positionX, positionY):
         self.rect = pygame.rect.Rect(positionY*squareSize,positionX*squareSize,squareSize,squareSize)
@@ -123,6 +127,7 @@ class Bullet(object):
         if self.rect.colliderect(player.rect):
             collide = True
 
+        # Convert the position of the bullet on the matrix and check if it's a wall
         if matrix[positionY][positionX] == 1:
             collide = True
         return collide
@@ -142,6 +147,26 @@ class PNJ(object):
         pygame.draw.rect(screen, blue, self.rect)
 
     def shoot(self):
+        directionX = player.positionX - pnj.positionX
+        directionY = player.positionY - pnj.positionY
+
+        angle = angle_calcul_for_pnj_to_player(self,player)
+
+        if directionX != 0:
+            directionX = -directionX / abs(directionX)
+
+        if directionY != 0:
+            directionY = -directionY / abs(directionY)
+
+        if angle < 22.5:
+            directionY = 0
+        elif angle > 67.5:
+            directionX = 0
+
+        bullet = Bullet(self, directionX,directionY)
+        bullets.append(bullet)
+
+    def random_shoot(self):
         randomDirectionX = randint(-1,1)
         randomDirectionY = randint(-1,1)
         # We wouldn't 0 x and 0 y direction
