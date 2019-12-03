@@ -50,6 +50,9 @@ green = 0,255,0
 screen = pygame.display.set_mode(screenSize)
 
 font = pygame.font.Font("font/VarelaRound-Regular.ttf", 26)
+pygame.mixer.music.load('sound/theme.mp3')
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.04)
 
 # Init
 pressed_left = False
@@ -127,6 +130,8 @@ def angle_calcul_for_pnj_to_player(pnj,player):
     return math.degrees(math.acos(abs(pnj.positionX-player.positionX)/distancePNJPlayer))
 
 def pause():
+    musicPosition = pygame.mixer.music.get_pos()
+    pygame.mixer.music.fadeout(1500)
     pygame.display.update()
     paused = True
     while paused:
@@ -136,8 +141,10 @@ def pause():
             elif (event.type is pygame.KEYDOWN and event.key == pygame.K_r):
                 init_game() 
                 paused = False     
+                pygame.mixer.music.play(-1)
             elif (event.type is pygame.KEYDOWN and (event.key == pygame.K_p or event.key == pygame.K_ESCAPE)):
                 paused = False     
+                pygame.mixer.music.play(-1, musicPosition/1000)
         clock.tick(15)
 
 
