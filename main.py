@@ -76,13 +76,26 @@ def draw_board():
 
 def draw_text():
     textLife = font.render("Life:", True, (255, 0, 0))
-    textLifeNumber = font.render(str(player.life), True, (255, 0, 0))
-    textScore = font.render("Score:", True, (255, 0, 0))
-    textScoreNumber = font.render(str(player.score), True, (255, 0, 0))
     screen.blit(textLife,(boardWidth, 0))
+
+    textLifeNumber = font.render(str(player.life), True, (255, 0, 0))
     screen.blit(textLifeNumber,(boardWidth+textLife.get_width(), 0))
+
+    textScore = font.render("Score:", True, (255, 0, 0))
     screen.blit(textScore,(boardWidth, textLife.get_height()))
+
+    textScoreNumber = font.render(str(player.score), True, (255, 0, 0))
     screen.blit(textScoreNumber,(boardWidth+textScore.get_width(), textLife.get_height()))
+
+    textFullscreen = font.render("F: Fullscreen", True, (255, 0, 0))
+    screen.blit(textFullscreen,(boardWidth, screenHeight-textFullscreen.get_height()))
+
+    textReload = font.render("R: reload", True, (255, 0, 0))
+    screen.blit(textReload,(boardWidth, screenHeight-(textReload.get_height()+textFullscreen.get_height())))
+
+    textPause = font.render("P: pause", True, (255, 0, 0))
+    screen.blit(textPause,(boardWidth, screenHeight-(textReload.get_height()+textFullscreen.get_height()+textPause.get_height())))
+
     if player.life <= 0:
         textPaused = font.render("Game Over", True, (255, 0, 0))
         screen.blit(textPaused,(boardWidth/2, boardHeight/2))
@@ -119,7 +132,12 @@ def pause():
     while paused:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
-                sys.exit()     
+                sys.exit()  
+            elif (event.type is pygame.KEYDOWN and event.key == pygame.K_r):
+                init_game() 
+                paused = False     
+            elif (event.type is pygame.KEYDOWN and (event.key == pygame.K_p or event.key == pygame.K_ESCAPE)):
+                paused = False     
         clock.tick(15)
 
 
@@ -157,12 +175,14 @@ class Bullet(object):
         positionY = round(self.rect.y / squareSize)
         if self.rect.colliderect(player.rect):
             player.life -= bullet.damage
+            collide = True
             if player.life <= 0:
                 player.life = 0
                 draw_board()
                 draw_text()
                 pause()
-            collide = True
+                # If the game is reload, this bullet will be destroy before the next code
+                collide = False
 
         # Convert the position of the bullet on the matrix and check if it's a wall
         if matrix[positionY][positionX] == 1:
@@ -274,11 +294,27 @@ class Player(object):
     def draw(self, surface):
         pygame.draw.rect(screen, red, self.rect)
 
+
+def init_game():
+    global player
+    global pnjs
+    global bullets
+    global clock
+
+    draw_board()
+    player = Player()
+    draw_text()
+    pnjs = [PNJ(), PNJ()]
+    bullets = []
+    clock = pygame.time.Clock()
+
 draw_board()
 player = Player()
+draw_text()
 pnjs = [PNJ(), PNJ()]
 bullets = []
 clock = pygame.time.Clock()
+
 
 while 1:
     for event in pygame.event.get():
@@ -287,9 +323,13 @@ while 1:
         # Fullscreen toggle
         elif (event.type is pygame.KEYDOWN and event.key == pygame.K_f):
             if screen.get_flags() & pygame.FULLSCREEN:
-                pygame.display.set_mode(boardSize)
+                pygame.display.set_mode(screenSize)
             else:
-                pygame.display.set_mode(boardSize, pygame.FULLSCREEN)   
+                pygame.display.set_mode(screenSize, pygame.FULLSCREEN)   
+        elif (event.type is pygame.KEYDOWN and event.key == pygame.K_r):
+            init_game()
+        elif (event.type is pygame.KEYDOWN and (event.key == pygame.K_p or event.key == pygame.K_ESCAPE)):
+            pause()
 
     # We need to draw the board before the rest
     draw_board()
