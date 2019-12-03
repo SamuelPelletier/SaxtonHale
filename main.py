@@ -37,7 +37,8 @@ matrix = [
 squareSize = 30
 shootSize = 10
 
-size = width, height = 1200, 720
+boardSize = boardWidth, boardHeight = 1200, 720
+screenSize = screenWidth, screenHeight = boardWidth+200, boardHeight
 
 # Color definition
 black = 0, 0, 0
@@ -46,7 +47,9 @@ blue = 0,0,255
 red = 255,0,0
 green = 0,255,0
 
-screen = pygame.display.set_mode(size)
+screen = pygame.display.set_mode(screenSize)
+
+font = pygame.font.SysFont("comicsansms", 30)
 
 # Init
 pressed_left = False
@@ -70,6 +73,19 @@ def draw_board():
                 walls.append(Wall(x,y))
             if square == 2:
                 pygame.draw.rect(screen,blue,(y*squareSize,x*squareSize,squareSize,squareSize))
+
+def draw_text():
+    textLife = font.render("Life:", True, (255, 0, 0))
+    textLifeNumber = font.render(str(player.life), True, (255, 0, 0))
+    textScore = font.render("Score:", True, (255, 0, 0))
+    textScoreNumber = font.render(str(player.score), True, (255, 0, 0))
+    screen.blit(textLife,(boardWidth, 0))
+    screen.blit(textLifeNumber,(boardWidth+textLife.get_width(), 0))
+    screen.blit(textScore,(boardWidth, textLife.get_height()))
+    screen.blit(textScoreNumber,(boardWidth+textScore.get_width(), textLife.get_height()))
+    if player.life <= 0:
+        textPaused = font.render("Game Over", True, (255, 0, 0))
+        screen.blit(textPaused,(boardWidth/2, boardHeight/2))
 
 def move(direction, object):
     if direction == "left":
@@ -97,6 +113,17 @@ def angle_calcul_for_pnj_to_player(pnj,player):
         return 0
     return math.degrees(math.acos(abs(pnj.positionX-player.positionX)/distancePNJPlayer))
 
+def pause():
+    pygame.display.update()
+    paused = True
+    while paused:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: 
+                sys.exit()     
+        clock.tick(15)
+
+
+
 class Wall(object):
     def __init__(self, positionX, positionY):
         self.rect = pygame.rect.Rect(positionY*squareSize,positionX*squareSize,squareSize,squareSize)
@@ -111,6 +138,7 @@ class Bullet(object):
         self.directionX = directionX
         self.directionY = directionY
         self.speedy = -10
+        self.damage = 10
 
     def update(self):
         if self.directionX != 0:
@@ -128,6 +156,12 @@ class Bullet(object):
         positionX = round(self.rect.x / squareSize)
         positionY = round(self.rect.y / squareSize)
         if self.rect.colliderect(player.rect):
+            player.life -= bullet.damage
+            if player.life <= 0:
+                player.life = 0
+                draw_board()
+                draw_text()
+                pause()
             collide = True
 
         # Convert the position of the bullet on the matrix and check if it's a wall
@@ -138,8 +172,8 @@ class Bullet(object):
 class PNJ(object):
     def __init__(self):
         # Rand spawn
-        randPositionX = randint(5,width/squareSize-2)
-        randPositionY = randint(5,height/squareSize-2)
+        randPositionX = randint(5,boardWidth/squareSize-2)
+        randPositionY = randint(5,boardHeight/squareSize-2)
         self.rect = pygame.rect.Rect((randPositionX*squareSize, randPositionY*squareSize, squareSize, squareSize))
         self.positionX = randPositionX
         self.positionY = randPositionY
@@ -184,14 +218,15 @@ class PNJ(object):
 
             # if the pnj is next to a wall
             if matrix[self.positionY-1][self.positionX] + matrix[self.positionY+1][self.positionX] + matrix[self.positionY][self.positionX+1] + matrix[self.positionY][self.positionX-1] >= 1:
-                i = True
-                while i==True:
+                pnjCanMove = False
+                while pnjCanMove==False:
                     prePositionX = self.positionX
                     prePositionY = self.positionY
                     move(self.direction, self)
                     if prePositionX != self.positionX or prePositionY != self.positionY:
-                        i = False
+                        pnjCanMove = True
                     else:
+                        # Choose the best way to escape between x axe or y axe
                         if abs(player.positionX - pnj.positionX) > abs(player.positionY - pnj.positionY):
                             self.direction = directions[randint(2,3)]
                         else:
@@ -222,6 +257,8 @@ class Player(object):
         self.rect = pygame.rect.Rect((squareSize, squareSize, squareSize, squareSize))
         self.positionX = 1
         self.positionY = 1
+        self.life = 500
+        self.score = 0
 
     def handle_keys(self):
         key = pygame.key.get_pressed()
@@ -250,17 +287,21 @@ while 1:
         # Fullscreen toggle
         elif (event.type is pygame.KEYDOWN and event.key == pygame.K_f):
             if screen.get_flags() & pygame.FULLSCREEN:
-                pygame.display.set_mode(size)
+                pygame.display.set_mode(boardSize)
             else:
-                pygame.display.set_mode(size, pygame.FULLSCREEN)   
+                pygame.display.set_mode(boardSize, pygame.FULLSCREEN)   
+
     # We need to draw the board before the rest
     draw_board()
+    draw_text()
 
     if len(pnjs) > 0:
         for pnj in pnjs:
             # Check colision between player en pnj
             if player.positionX == pnj.positionX and player.positionY == pnj.positionY:
                 pnjs.remove(pnj)
+                player.score += 50
+                player.life += 100
                 pnjs.append(PNJ())
             else:
                 pnj.move()
