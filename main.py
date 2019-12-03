@@ -49,7 +49,7 @@ green = 0,255,0
 
 screen = pygame.display.set_mode(screenSize)
 
-font = pygame.font.SysFont("comicsansms", 30)
+font = pygame.font.Font("font/VarelaRound-Regular.ttf", 26)
 
 # Init
 pressed_left = False
@@ -87,7 +87,7 @@ def draw_text():
     textScoreNumber = font.render(str(player.score), True, (255, 0, 0))
     screen.blit(textScoreNumber,(boardWidth+textScore.get_width(), textLife.get_height()))
 
-    textFullscreen = font.render("F: Fullscreen", True, (255, 0, 0))
+    textFullscreen = font.render("F: fullscreen", True, (255, 0, 0))
     screen.blit(textFullscreen,(boardWidth, screenHeight-textFullscreen.get_height()))
 
     textReload = font.render("R: reload", True, (255, 0, 0))
