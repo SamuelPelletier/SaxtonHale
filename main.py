@@ -92,6 +92,9 @@ def move(direction, object):
 
 def angle_calcul_for_pnj_to_player(pnj,player):
     distancePNJPlayer = math.sqrt((abs(pnj.positionX-player.positionX))**2+(abs(pnj.positionY-player.positionY))**2)
+    # The pnj is dead
+    if distancePNJPlayer == 0:
+        return 0
     return math.degrees(math.acos(abs(pnj.positionX-player.positionX)/distancePNJPlayer))
 
 class Wall(object):
@@ -178,16 +181,33 @@ class PNJ(object):
     def move(self):
         # Move only if the distance between player and pnj is less 7 square
         if abs(player.positionX - self.positionX) < 7 or abs(player.positionY - self.positionY) < 7: 
-            # Check where the pnj go away
-            if player.positionX < self.positionX:
-                move("right",self)
-            elif player.positionX > self.positionX:
-                move("left",self)
 
-            if player.positionY < self.positionY:
-                move("down",self)
-            elif player.positionY > self.positionY:
-                move("up",self)
+            # if the pnj is next to a wall
+            if matrix[self.positionY-1][self.positionX] + matrix[self.positionY+1][self.positionX] + matrix[self.positionY][self.positionX+1] + matrix[self.positionY][self.positionX-1] >= 1:
+                i = True
+                while i==True:
+                    prePositionX = self.positionX
+                    prePositionY = self.positionY
+                    move(self.direction, self)
+                    if prePositionX != self.positionX or prePositionY != self.positionY:
+                        i = False
+                    else:
+                        if abs(player.positionX - pnj.positionX) > abs(player.positionY - pnj.positionY):
+                            self.direction = directions[randint(2,3)]
+                        else:
+                            self.direction = directions[randint(0,1)]
+
+            else:
+                # Check where the pnj go away
+                if player.positionX < self.positionX:
+                    move("right",self)
+                elif player.positionX > self.positionX:
+                    move("left",self)
+
+                if player.positionY < self.positionY:
+                    move("down",self)
+                elif player.positionY > self.positionY:
+                    move("up",self)
         else:
             # Move in random direction
             if self.timeInDirection == 0 or self.timeInDirection == 3:
@@ -196,9 +216,6 @@ class PNJ(object):
 
             move(self.direction, self)
             self.timeInDirection += 1
-
-            '''if matrix[self.positionY-1][self.positionX] + matrix[self.positionY+1][self.positionX] + matrix[self.positionY][self.positionX+1] + matrix[self.positionY][self.positionX-1] == 2:
-                print("coincé")'''
 
 class Player(object):
     def __init__(self):
